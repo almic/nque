@@ -1,49 +1,73 @@
 # Nque
 
-Nque is a simple job queue that uses redis, now with 99% less package!
+[![NPM](https://nodei.co/npm/nque.png?compact=true)](https://nodei.co/npm/nque/)
+
+Nque is a simple job queue that uses redis, now with 98% less package!
 
 I made this because I needed a quick solution for job queuing and the best one I could find was Kue, but it added 20Mb to my modules folder. I wasn't about to have that, so I gutted out all the extra stuff, made some improvements and simplified the API.
 
+## Quick Start
+`main.js`
+```javascript
+const nque = require('nque')
+
+// Configure the queue
+var queue = nque.createQueue('redis://...')
+
+// Create a new job and pass some data
+var job = queue.createJob('my job', ['hello', 'world'])
+
+// Tell workers the job is ready
+job.run()
+```
+And then in<br>`worker.js`
+```javascript
+const nque = require('nque')
+
+// Configure the queue
+var queue = nque.createQueue('redis://...')
+
+// Create the worker process
+queue.processJob('my job', (job, done) => {
+    
+    // Get the job data: ['hello', 'world']
+    var data = job.data
+    
+    // Do worker magic...
+    var result = data.join(' ') + '!'
+    console.log(`Job ${job.id} result: ${result}`)\
+    
+    // Job is done, go back to waiting
+    done()
+    
+})
+```
+
+## About
+
 If you only need a simple solution to queue jobs and want to keep learning a new module to a minimum, Nque is perfect!
 
-**PROTIP** This is NOT Kue! The API is quite different and much simpler. Despite the simplicity, it allows you to quickly link two separate processes together, which let's you create a very powerful clock/ worker(s) structure in only a couple lines.
+**PROTIP** This is NOT Kue! The API is quite different and much simpler. This allows you to quickly link two separate processes together, which let's you create a very powerful clock/ worker(s) structure in only a couple lines.
 
+I wrote this particularly for a clock/ workers structure. You write a clock process that simply queues job at specific intervals, and multiple duplicate worker processes that simply listen for jobs and do them in the background. I needed this structure for a Heroku Node.js app.
 
-*Everything below this line is NOT correct. Updates soon*
+I recommend using a MongoDB to store your results, since it is much more featured than redis. This only uses redis because it's fast and easy to write, but not very easy to query. With MongoDB you get natural backups and a "clos*er* to javascript" API experiece. I don't know why I put that in quotes.
 
-## Installation
-
-  - Latest release:
-
-        coming soon
-
-[![NPM](https://nodei.co/npm/kue.png?downloads=true&stars=true)](https://nodei.co/npm/kue/)
 
 ## Features
 
-  - Delayed jobs
-  - Distribution of parallel work load
-  - Job event and progress pubsub
-  - Job TTL
-  - Optional retries with backoff
-  - Graceful workers shutdown
-  - Full-text search capabilities
-  - ~~RESTful JSON API~~
-  - ~~Rich integrated UI~~
-  - ~~Infinite scrolling~~
-  - ~~UI progress indication~~
-  - Job specific logging
-  - Powered by Redis
+  - Distribution of parallel work load (a.k.a. the workers)
+  - Job event and progress pubsub (a.k.a. the queue)
+  - Multiple attempts with timeouts
+  - Powered by Redis (is that a *feature*?)
 
-## Overview
+## Wiki
 
+  - [Startup]()
+  - [Redis Connection](#redis-connection)
   - [Creating Jobs](#creating-jobs)
-  - [Jobs Priority](#job-priority)
-  - [Failure Attempts](#failure-attempts)
-  - [Failure Backoff](#failure-backoff)
-  - [Job TTL](#job-ttl)
-  - [Job Logs](#job-logs)
-  - [Job Progress](#job-progress)
+  - [Processing Jobs](#processing-jobs)
+  - [Job Priority](#job-priority)
   - [Job Events](#job-events)
   - [Queue Events](#queue-events)
   - [Delayed Jobs](#delayed-jobs)
@@ -51,19 +75,9 @@ If you only need a simple solution to queue jobs and want to keep learning a new
   - [Processing Concurrency](#processing-concurrency)
   - [Pause Processing](#pause-processing)
   - [Updating Progress](#updating-progress)
-  - [Graceful Shutdown](#graceful-shutdown)
   - [Error Handling](#error-handling)
   - [Queue Maintenance](#queue-maintenance)
-  - [Redis Connection Settings](#redis-connection-settings)
-  - [User-Interface](#user-interface)
-  - [JSON API](#json-api)
-  - [Parallel Processing With Cluster](#parallel-processing-with-cluster)
-  - [Securing Kue](#securing-kue)
   - [Testing](#testing)
-  - [Screencasts](#screencasts)
-  - [License](#license)
-
-
 
 ## Creating Jobs
 
