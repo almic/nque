@@ -1,6 +1,6 @@
 {
   "name": "nque",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "description": "Just a good job queue for Node.js",
   "homepage": "https://github.com/almic/nque",
